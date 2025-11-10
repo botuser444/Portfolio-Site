@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamid Aslam - Full Stack Web Developer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a0a;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 5%;
+            background-color: rgba(10, 10, 10, 0.95);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00BC7D;
+            /* reserve horizontal space so nav layout doesn't shift when logo is large */
+            width: 220px; /* increased reserve for bigger logo */
+            position: relative;
+        }
+
+        /* Logo image positioned absolutely so it can be larger without affecting nav height */
+        .logo-img {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 150px; /* user requested larger logo */
+            display: block;
+        }
+
+        /* logo-text removed per user request */
+
+        .footer-logo {
+            height: 110px; /* much larger footer logo height as requested */
+            display: inline-block;
+        }
+
+        /* Responsive: scale logos down on small screens */
+        @media (max-width: 900px) {
+            /* scale header logo down on medium/small screens so it doesn't overlap */
+            .logo { width: 160px; }
+            .logo-img { height: 110px; }
+            .footer-logo { height: 64px; }
+            nav { padding: 1rem 4%; }
+        }
+
+        @media (max-width: 420px) {
+            .logo { width: 90px; }
+            /* Increase visual logo size on very small screens while keeping nav height stable
+               because .logo-img is absolutely positioned (it won't change the nav flow). */
+            .logo-img { height: 110px; }
+            /* Footer: keep footer layout the same but show a larger visual logo by
+               absolutely positioning the image inside the H3. The H3 keeps a fixed
+               min-height so the footer container size doesn't change. */
+            .footer-section h3 { position: relative; min-height: 48px; }
+            .footer-section h3 .footer-logo {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                height: 110px; /* larger visual size without resizing footer */
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        /* mobile-only contact item hidden by default */
+        .mobile-contact { display: none; }
+
+        /* mobile menu becomes a right-side sliding drawer */
+        .nav-links {
+            transition: transform 300ms ease, visibility 300ms ease;
+        }
+
+        .nav-links.open {
+            transform: translateX(0) !important;
+            visibility: visible !important;
+        }
+
+        /* Drawer hidden state (off-canvas to the right) */
+        .nav-links.drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 320px;
+            max-width: 80%;
+            background: linear-gradient(180deg,#0b0b0b, #0f1113);
+            box-shadow: -20px 0 40px rgba(0,0,0,0.6);
+            transform: translateX(100%);
+            display: flex;
+            flex-direction: column;
+            padding: 3.5rem 1.25rem;
+            gap: 1.25rem;
+            align-items: flex-start;
+            visibility: hidden;
+            z-index: 10000;
+        }
+
+        /* Drawer link styling (bolder, larger, more appealing) */
+        .nav-links.drawer a {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #fff;
+            padding: 0.6rem 0;
+            width: 100%;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            letter-spacing: 0.6px;
+        }
+
+        .nav-links.drawer a:hover {
+            color: #00FF88;
+        }
+
+        /* Mobile menu toggle (hidden on desktop) */
+        .nav-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.6rem;
+            cursor: pointer;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #00BC7D;
+        }
+
+        .nav-btn {
+            background-color: #00BC7D;
+            color: #000;
+            padding: 0.6rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Reveal animation helpers */
+        .reveal {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 600ms cubic-bezier(.2,.9,.2,1), transform 600ms cubic-bezier(.2,.9,.2,1);
+            will-change: opacity, transform;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* small subtle staggered scale for project cards */
+        .project-card.reveal {
+            transform: translateY(18px) scale(.995);
+        }
+
+        .project-card.reveal.visible {
+            transform: none;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-top: 90px;
+        }
+
+        /* make hero texts visually wider on large screens */
+        .hero-greeting {
+            color: #00BC7D;
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 5.5rem;
+            margin-bottom: 0.4rem;
+            background: linear-gradient(135deg, #00BC7D, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            max-width: 1200px;
+            width: 95%;
+        }
+
+        .hero h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 400;
+            max-width: 1100px;
+            width: 90%;
+        }
+
+        .hero p {
+            max-width: 1100px;
+            width: 88%;
+            color: #ddd;
+            margin-bottom: 2rem;
+            line-height: 1.9;
+            font-size: 1.05rem;
+        }
+
+        /* Responsive adjustments for smaller viewports */
+        @media (max-width: 900px) {
+            .hero-greeting { font-size: 1.1rem; }
+            .hero h1 { font-size: 2.8rem; }
+            .hero h2 { font-size: 1.6rem; }
+            .hero p { max-width: 700px; width: 94%; font-size: 0.95rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 2rem 1rem; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero h2 { font-size: 1.2rem; }
+            .hero-greeting { font-size: 0.95rem; }
+            .hero p { font-size: 0.9rem; }
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-primary {
+            background-color: #00BC7D;
+            color: #000;
+            padding: 0.8rem 2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #fff;
+            padding: 0.8rem 2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            border: 2px solid #fff;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover, .btn-secondary:hover {
+            transform: translateY(-2px);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            color: #fff;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: #00BC7D;
+        }
+
+        /* Section Styling */
+        section {
+            padding: 5rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title span {
+            color: #00BC7D;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 3rem;
+        }
+
+        /* About Section */
+        .about-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .about-card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            padding: 2rem;
+            border-radius: 10px;
+            border: 1px solid #222;
+            transition: transform 0.3s;
+        }
+
+        .about-card:hover {
+            transform: translateY(-5px);
+            border-color: #00BC7D;
+        }
+
+        .about-card i {
+            font-size: 2rem;
+            color: #00BC7D;
+            margin-bottom: 1rem;
+        }
+
+        .about-card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .about-card p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .skill-card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #222;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .skill-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .skill-percent {
+            color: #00BC7D;
+            font-weight: 600;
+        }
+
+        .skill-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #222;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00BC7D, #00ff88);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        /* Projects Section */
+        .projects-grid {
+            display: grid;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .project-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #222;
+            transition: transform 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-color: #00BC7D;
+        }
+
+        .project-card:nth-child(even) {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .project-card:nth-child(even) .project-image {
+            order: 2;
+        }
+
+        .project-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .project-info {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .project-category {
+            color: #00BC7D;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-description {
+            color: #888;
+            margin-bottom: 1.5rem;
+        }
+
+        .project-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background-color: #222;
+            padding: 0.3rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #00BC7D;
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .project-link {
+            padding: 0.6rem 1.2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+
+        .demo-link {
+            background-color: #00BC7D;
+            color: #000;
+        }
+
+        .code-link {
+            background-color: transparent;
+            color: #fff;
+            border: 2px solid #00BC7D;
+        }
+
+        .project-link:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Contact Section */
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .contact-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-item i {
+            color: #00BC7D;
+            font-size: 1.2rem;
+        }
+
+        .contact-item p {
+            color: #aaa;
+        }
+
+        /* Freelance profile buttons (large logos) */
+        .freelance-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            align-items: center;
+        }
+
+        .freelance-link {
+            width: 96px;
+            height: 96px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f0f0f;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #222;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .freelance-link img {
+            max-width: 64px;
+            max-height: 64px;
+            display: block;
+        }
+
+        .freelance-link:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 30px rgba(0,188,125,0.12);
+            border-color: #00BC7D;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            color: #aaa;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 0.8rem;
+            color: #fff;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            background-color: #00BC7D;
+            color: #000;
+            padding: 1rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #0a0a0a;
+            padding: 3rem 5%;
+            border-top: 1px solid #222;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #00BC7D;
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: #888;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a:hover {
+            color: #00BC7D;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #222;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            /* put the nav-links into drawer mode off-canvas; toggle will open it */
+            .nav-links { display: block; }
+            .nav-links { /* add drawer behavior on mobile */ }
+            .nav-links.drawer { /* already defined above */ }
+
+            .nav-toggle { display: block; }
+
+            .nav-btn { display: none; }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+
+            .project-card {
+                grid-template-columns: 1fr !important;
+            }
+
+            .project-card:nth-child(even) .project-image {
+                order: 1;
+            }
+
+            .contact-container { grid-template-columns: 1fr; }
+            /* show mobile-only contact link inside the collapsed drawer menu */
+            .mobile-contact { display: block; }
+        }
+        /* Desktop / Tablet overrides: keep nav centered and show Contact button
+           while disabling the off-canvas drawer behavior on larger viewports */
+        @media (min-width: 769px) {
+            /* ensure drawer-styles do not take effect on desktop */
+            .nav-links.drawer {
+                position: static;
+                transform: none !important;
+                visibility: visible !important;
+                height: auto;
+                width: auto;
+                background: transparent;
+                box-shadow: none;
+                padding: 0;
+                display: flex;
+                flex-direction: row;
+                gap: 2.5rem;
+                align-items: center;
+                z-index: auto;
+            }
+
+            /* center the nav links between logo and contact button */
+            /* Use absolute centering so items sit perfectly centered regardless of logo width */
+            .nav-links {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                margin: 0;
+            }
+
+            /* show the green contact button on desktop/tablet */
+            .nav-btn { display: inline-block; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <img src="{% static 'images/portfoliologo.png' %}" alt="Hamid Aslam" class="logo-img">
+        </div>
+
+
+        
+    <button class="nav-toggle" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+    <ul class="nav-links" id="mobileMenu">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li class="mobile-contact"><a href="#contact">Contact</a></li>
+    </ul>
+    <!-- Desktop/Tablet Contact button (visible on >=769px). Kept separate so mobile keeps Contact inside drawer only -->
+    <a href="#contact" class="nav-btn">Contact</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <p class="hero-greeting">WELCOME TO MY WORLD</p>
+        <h1>Hamid Aslam</h1>
+        <h2>Full Stack Web Developer</h2>
+        <p>Crafting End-to-End Web Experiences with Modern TechnologiesFrom Pixel-Perfect Interfaces to High-Performance Backend Systems.</p>
+        
+        <div class="hero-buttons">
+            <a href="#projects" class="btn-primary">My Projects</a>
+            <a href="#contact" class="btn-secondary">Hire Me</a>
+        </div>
+
+        <div class="social-links">
+            <a href="https://github.com/botuser444" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>
+            <a href="https://www.linkedin.com/in/hamid-aslam" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <h2 class="section-title">About <span>Me</span></h2>
+        <p class="section-subtitle">I thrive on turning complex requirements into clean, efficient code. From initial concept to final deployment, I enjoy the challenge of bringing ideas to life and creating solutions that make a real impact.</p>
+
+        <div class="about-cards">
+            <div class="about-card">
+                <i class="fas fa-code"></i>
+                <h3>Clean Code</h3>
+                <p>I write clean, maintainable, and efficient code following best practices and industry standards.</p>
+            </div>
+            <div class="about-card">
+                <i class="fas fa-palette"></i>
+                <h3>Full-Stack</h3>
+                <p>Proficient in both frontend and backend development with modern frameworks and technologies.</p>
+            </div>
+            <div class="about-card">
+                <i class="fas fa-lightbulb"></i>
+                <h3>UI/UX Focus</h3>
+                <p>Creating beautiful, responsive, and user-friendly interfaces that provide great user experience.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <h2 class="section-title">My <span>Skills</span></h2>
+        <p class="section-subtitle">I am striving to never stop learning and improving</p>
+
+        <div class="skills-grid">
+            <div class="skill-card">
+                <div class="skill-header">
+                    <span class="skill-name">Python</span>
+                    <span class="skill-percent">95%</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 95%"></div>
+                </div>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-header">
+                    <span class="skill-name">Django</span>
+                    <span class="skill-percent">90%</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 90%"></div>
+                </div>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-header">
+                    <span class="skill-name">JavaScript</span>
+                    <span class="skill-percent">85%</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 85%"></div>
+                </div>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-header">
+                    <span class="skill-name">ReactJS</span>
+                    <span class="skill-percent">80%</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 80%"></div>
+                </div>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-header">
+                    <span class="skill-name">HTML/CSS</span>
+                    <span class="skill-percent">88%</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 88%"></div>
+                </div>
+            </div>
+
+            <div class="skill-card">
+                <div class="skill-header">
+                    <span class="skill-name">SQL</span>
+                    <span class="skill-percent">82%</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 82%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects">
+        <h2 class="section-title">Featured <span>Projects</span></h2>
+        <p class="section-subtitle">A collection of my recent work and side projects</p>
+
+        <div class="projects-grid">
+            <div class="project-card">
+                <img src="{% static 'feature1.png' %}" alt="Featured Project" class="project-image">
+                <div class="project-info">
+                    <p class="project-category">WEB APPLICATION</p>
+                    <h3 class="project-title">Spendly Finance Dashboard</h3>
+                    <p class="project-description">A fully responsive Finance dashboard with real-time data visualization and modern UI components.</p>
+                    <div class="project-tags">
+                        <span class="tag">Django</span>
+                        <span class="tag">Python</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">MySQL</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://codebyhamid.me" target="_blank" rel="noopener" class="project-link demo-link">Live Demo</a>
+                        <a href="https://github.com/botuser444/Spendly-Django-App" target="_blank" rel="noopener" class="project-link code-link">View Code</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=600&fit=crop" alt="E-Commerce Platform" class="project-image">
+                <div class="project-info">
+                    <p class="project-category">E-COMMERCE</p>
+                    <h3 class="project-title">E-Commerce Platform</h3>
+                    <p class="project-description">Full-featured online shopping platform with payment integration and inventory management.</p>
+                    <div class="project-tags">
+                        <span class="tag">Django</span>
+                        <span class="tag">PostgreSQL</span>
+                        <span class="tag">Stripe</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="#" class="project-link demo-link">Live Demo</a>
+                        <a href="#" class="project-link code-link">View Code</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop" alt="Portfolio Website" class="project-image">
+                <div class="project-info">
+                    <p class="project-category">PORTFOLIO</p>
+                    <h3 class="project-title">Creative Portfolio</h3>
+                    <p class="project-description">Modern portfolio website with smooth animations and interactive elements.</p>
+                    <div class="project-tags">
+                        <span class="tag">HTML/CSS</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">GSAP</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="#" class="project-link demo-link">Live Demo</a>
+                        <a href="#" class="project-link code-link">View Code</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <h2 class="section-title">Get In <span>Touch</span></h2>
+        <p class="section-subtitle">Feel free to reach out for collaborations or just a friendly hello</p>
+
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>Let's Talk</h3>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <p>hamidaslam444@gmail.com</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <p>+92 3368741603</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-location-dot"></i>
+                    <p>Islamabad, Pakistan</p>
+                </div>
+                <div class="contact-item">
+                    <!-- Freelance profile buttons: replace hrefs with actual profile URLs -->
+                    <div class="freelance-links">
+                        <a href="https://www.fiverr.com/sellers/hamidaslam305/edit" class="freelance-link" title="Fiverr" target="_blank" rel="noopener noreferrer">
+                            <img src="{% static 'images/fiverr.png' %}" alt="Fiverr">
+                        </a>
+                        <a href="https://www.upwork.com/freelancers/~010c74278364ea7b0b" class="freelance-link" title="Upwork" target="_blank" rel="noopener noreferrer">
+                            <img src="{% static 'images/upwork.png' %}" alt="Upwork">
+                        </a>
+                        <a href="https://www.freelancer.com/u/hamidaslam444444" class="freelance-link" title="Freelancer" target="_blank" rel="noopener noreferrer">
+                            <img src="{% static 'images/freelance.png' %}" alt="Freelance">
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <form class="contact-form">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" placeholder="Your message" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+            <h3><img src="{% static 'images/portfoliologo.png' %}" alt="Hamid Aslam" class="footer-logo"></h3>
+                <p>A Full Stack Web Developer passionate about creating beautiful and functional web experiences.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#skills">Skills</a>
+                <a href="#projects">Projects</a>
+            </div>
+            <div class="footer-section">
+                <h3>Services</h3>
+                <a href="#">Web Development</a>
+                <a href="#">UI/UX Design</a>
+                <a href="#">API Development</a>
+                <a href="#">Consultation</a>
+            </div>
+            <div class="footer-section">
+                <h3>Get In Touch</h3>
+                <p>Available for freelance projects and full-time opportunities.</p>
+                <a href="#contact">Contact Me</a>
+            </div>
+        </div>
+        {% comment %} <div class="footer-bottom">
+            <p>&copy; 2024 Hamid Aslam. All rights reserved. | Designed & Built by Hamid Aslam</p>
+        </div> {% endcomment %}
+    </footer>
+
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Skill bars animation on scroll
+        const skillBars = document.querySelectorAll('.skill-progress');
+        const animateSkills = () => {
+            skillBars.forEach(bar => {
+                const rect = bar.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom >= 0) {
+                    bar.style.width = bar.style.width;
+                }
+            });
+        };
+
+        window.addEventListener('scroll', animateSkills);
+        animateSkills();
+
+        // Form submission
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for your message! I will get back to you soon.');
+            this.reset();
+        });
+
+        // Mobile nav toggle (drawer behavior). Drawer mode enabled only on small screens.
+        const navToggle = document.querySelector('.nav-toggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const MOBILE_BREAKPOINT = 768; // match CSS mobile breakpoint
+
+        if (navToggle && mobileMenu) {
+            // decide whether menu should act as a drawer based on current width
+            function setDrawerMode() {
+                if (window.innerWidth <= MOBILE_BREAKPOINT) {
+                    mobileMenu.classList.add('drawer');
+                } else {
+                    // remove drawer behaviour and ensure menu is closed
+                    mobileMenu.classList.remove('drawer');
+                    mobileMenu.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    navToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            }
+
+            // initialize and keep in sync on resize
+            setDrawerMode();
+            window.addEventListener('resize', setDrawerMode);
+
+            navToggle.addEventListener('click', function() {
+                const isOpen = mobileMenu.classList.toggle('open');
+                this.setAttribute('aria-expanded', String(isOpen));
+                // toggle icon between bars and times
+                this.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+
+            // Close menu when a link is clicked (works on both drawer and inline menu)
+            mobileMenu.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', () => {
+                    mobileMenu.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    navToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                });
+            });
+
+            // Close on ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                    mobileMenu.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    navToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+        }
+
+        // Page-load reveal animations (staggered)
+        document.addEventListener('DOMContentLoaded', () => {
+            const revealSelectors = [
+                'nav',
+                '.hero-greeting',
+                '.hero h1',
+                '.hero h2',
+                '.hero p',
+                '.hero-buttons',
+                '.about-card',
+                '.project-card',
+                '.contact-info',
+                'footer'
+            ];
+
+            // prepare skill bars: store original width and collapse to 0
+            const skillEls = document.querySelectorAll('.skill-progress');
+            skillEls.forEach(el => {
+                el.dataset.origWidth = el.style.width || getComputedStyle(el).width || '0%';
+                el.style.width = '0%';
+            });
+
+            // attach reveal class to targets
+            const targets = [];
+            revealSelectors.forEach(sel => {
+                document.querySelectorAll(sel).forEach(el => {
+                    el.classList.add('reveal');
+                    targets.push(el);
+                });
+            });
+
+            // stagger visibility
+            targets.forEach((el, i) => {
+                setTimeout(() => el.classList.add('visible'), 120 * i);
+            });
+
+            // animate skill bars a bit after reveals
+            setTimeout(() => {
+                skillEls.forEach(el => {
+                    const w = el.dataset.origWidth || el.style.width || '80%';
+                    el.style.width = w;
+                });
+            }, 120 * (targets.length + 1));
+        });
+    </script>
+</body>
+</html>
