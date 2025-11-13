@@ -16,8 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Serve the site favicon by redirecting to the static logo image.
+    # This avoids a 404 for /favicon.ico in development and on servers
+    # where the webserver hasn't been configured to serve '/favicon.ico'.
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'images/portfoliologo.png')),
     path('', include('main.urls')),
 ]
