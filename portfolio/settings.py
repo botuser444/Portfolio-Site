@@ -27,7 +27,16 @@ DEBUG = True
 
 # Add your production domain(s) here when deploying.
 # Example: ['devbyhamid.dev', 'www.devbyhamid.dev']
-ALLOWED_HOSTS = ['devbyhamid.dev', 'www.devbyhamid.dev']
+# Include localhost and 127.0.0.1 for local development (do NOT rely on this list for production).
+ALLOWED_HOSTS = [
+    'devbyhamid.dev',
+    'www.devbyhamid.dev',
+    '127.0.0.1',
+    'localhost',
+    # include explicit host:port combos sometimes sent by local clients
+    '127.0.0.1:8000',
+    'localhost:8000',
+]
 
 # Optional: canonical site URL used by templates or external services.
 # You can change this to 'http://' during testing if you don't have HTTPS yet.
@@ -122,6 +131,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Directory where `collectstatic` will gather static files for production.
+# Run `python manage.py collectstatic` before serving with your webserver (nginx).
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
